@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0b1020">
+    <title>Brick Breaker</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="stat">
+          <span class="stat-label">Skore</span>
+          <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat stat-center">
+          <span class="stat-label">Level</span>
+          <span class="stat-value" id="level">1</span>
+        </div>
+        <div class="stat stat-right">
+          <span class="stat-label">Zivoty</span>
+          <span class="stat-value" id="lives">3</span>
+        </div>
+        <div class="toolbar">
+          <button class="icon-btn" id="btnPause" type="button" title="Pauza" aria-label="Pauza">II</button>
+          <button class="icon-btn" id="btnMute" type="button" title="Zvuk" aria-label="Zvuk">&#9835;</button>
+        </div>
+      </header>
+
+      <section class="stage">
+        <canvas id="game" width="960" height="640" aria-label="Brick breaker"></canvas>
+
+        <div class="buffs" id="buffs" aria-live="polite"></div>
+
+        <div class="overlay" id="overlay">
+          <div class="panel">
+            <h1 class="panel-title" id="overlayTitle">Brick Breaker</h1>
+            <p class="panel-text" id="overlayText">
+              Hraj mysi, prstem nebo sipkami. Rozbij vsechny barevne kostky.
+              Ocelove kostky jsou neznicitelne - odrazej se od nich!
+            </p>
+            <button class="primary-btn" id="overlayBtn" type="button">Hrat</button>
+            <p class="panel-hint">Mezernik = start / vystrelit, P = pauza</p>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span class="legend-item"><i class="swatch swatch-normal"></i>normal</span>
+          <span class="legend-item"><i class="swatch swatch-tough"></i>tvrdy (2x)</span>
+          <span class="legend-item"><i class="swatch swatch-steel"></i>ocel (nerozbitna)</span>
+          <span class="legend-item"><i class="swatch swatch-fire"></i>fireball probiji</span>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="Ovladani">
+        <button class="pad-btn" data-action="left" type="button" title="Doleva">&#9664;</button>
+        <button class="pad-btn pad-main" data-action="launch" type="button" title="Start / bonus">&#9679;</button>
+        <button class="pad-btn" data-action="right" type="button" title="Doprava">&#9654;</button>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
