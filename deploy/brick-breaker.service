@@ -1,0 +1,15 @@
+[Unit]
+Description=Brick Breaker static web game
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/Scripts_systemctl/brick-breaker
+Environment=PORT=5901
+ExecStart=/usr/bin/python3 -m http.server ${PORT} --bind 0.0.0.0
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

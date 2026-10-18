@@ -40,8 +40,38 @@ python3 -m http.server 8080
 
 a navstiv `http://localhost:8080`.
 
-## Deploy
+## Deploy na LXC server
+
+Repozitar je verejny, takze na LXC neni potreba token.
+
+### Prvni nasazeni
 
 ```bash
+ssh root@<IP_LXC>
+git clone https://github.com/Finito3/OpenCode_brick-breaker.git /home/Scripts_systemctl/brick-breaker
+cp /home/Scripts_systemctl/brick-breaker/deploy/brick-breaker.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now brick-breaker.service
+```
+
+Hra pak bezi na `http://<IP_LXC>:5901`.
+
+### Dalsi aktualizace
+
+```bash
+cd /home/Scripts_systemctl/brick-breaker
 ./git_deploy.sh
 ```
+
+`git_deploy.sh` stahne zmeny (`git pull --ff-only`) a restartuje `brick-breaker.service`.
+
+### Varianta s nginx
+
+Pokud uz na LXC bezi nginx, staci repo naklonovat do web rootu a v konfiguraci nastavit root na adresar projektu:
+
+```bash
+git clone https://github.com/Finito3/OpenCode_brick-breaker.git /var/www/brick-breaker
+```
+
+Aktualizace je pak jen `cd /var/www/brick-breaker && git pull --ff-only`.
+
