@@ -18,6 +18,7 @@
     overlayBtn: document.getElementById('overlayBtn'),
     btnPause: document.getElementById('btnPause'),
     btnMute: document.getElementById('btnMute'),
+    stage: document.querySelector('.stage'),
   };
 
   const MAX_LEVEL = 6;
@@ -187,6 +188,29 @@
   brickLayer.width = W;
   brickLayer.height = H;
   const bctx = brickLayer.getContext('2d');
+
+  let lastCanvasKey = '';
+
+  function resizeCanvas() {
+    const stage = el.stage;
+    if (!stage || !stage.clientWidth || !stage.clientHeight) return;
+    const fit = Math.min(stage.clientWidth / W, stage.clientHeight / H);
+    const cssW = Math.max(320, Math.round(W * fit));
+    const cssH = Math.max(213, Math.round(H * fit));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const key = cssW + 'x' + cssH + '@' + dpr;
+    if (key === lastCanvasKey) return;
+    lastCanvasKey = key;
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    brickLayer.width = canvas.width;
+    brickLayer.height = canvas.height;
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+    bctx.setTransform(brickLayer.width / W, 0, 0, brickLayer.height / H, 0, 0);
+    state.brickDirty = true;
+  }
 
   const stars = Array.from({ length: 110 }, () => ({
     x: Math.random() * W,
@@ -1444,7 +1468,7 @@
       ctx.translate(rand(-state.shake, state.shake), rand(-state.shake, state.shake));
     }
     if (state.brickDirty) redrawBricks();
-    ctx.drawImage(brickLayer, 0, 0);
+    ctx.drawImage(brickLayer, 0, 0, W, H);
     drawFieldFrame();
     drawCorridorMarkers(time);
     drawPowerups();
@@ -1541,6 +1565,12 @@
   window.addEventListener('keyup', (e) => {
     if (keyMap[e.key]) keys.delete(keyMap[e.key]);
   });
+
+  if (window.ResizeObserver) {
+    new ResizeObserver(resizeCanvas).observe(el.stage);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {

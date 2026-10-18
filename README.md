@@ -14,6 +14,7 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 - Obrazce z prazdnych bunek: logo N se srdcem, hvezda, srdce, lebka, smajlik, diamant.
 - 6 tematickych levelu s rostouci obtiznosti, 5 zivotu.
 - Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).
+- Skalovani hraci plochy podle displeje (ostre i na 4K a retina obrazovkach).
 - **Combo system** - kazda znicena kostka zvysuje combo, nasobek skore az x25.
 - **Vybusne kostky** - tmave bomby po zniceni exploduji a spousti retezove reakce.
 - **Zlate kostky** - velky bonus a zaruceny power-up.
