@@ -13,6 +13,7 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 - Vice skulin a ulicek vyssich levelech (az 3 vstupy).
 - Obrazce z prazdnych bunek: logo N se srdcem, hvezda, srdce, lebka, smajlik, diamant.
 - 6 tematickych levelu s rostouci obtiznosti, 5 zivotu.
+- Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).
 - **Combo system** - kazda znicena kostka zvysuje combo, nasobek skore az x25.
 - **Vybusne kostky** - tmave bomby po zniceni exploduji a spousti retezove reakce.
 - **Zlate kostky** - velky bonus a zaruceny power-up.
@@ -34,6 +35,10 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 | + (cervena) | Extra zivot |
 
 Ocelove kostky jsou neznicitelne vzdy - ani bomb ball nebo fireball je nerozbije.
+
+## Hudba
+
+- `assets/short-circuits.mp3` - "Short Circuits - Classic Arcade Game" od Dream-Protocol, stazeno z Pixabay (https://pixabay.com/music/video-games-short-circuits-classic-arcade-game-116824/), licence Pixabay Content License (zdarma i komercne, bez atribuce).
 
 ## Ovladani
 

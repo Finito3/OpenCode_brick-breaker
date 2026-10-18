@@ -198,6 +198,9 @@
   let overlayAction = () => {};
   let muted = localStorage.getItem('bb-muted') === '1';
   let audio = null;
+  let music = null;
+  let musicWanted = false;
+  const MUSIC_VOLUME = 0.3;
   const keys = new Set();
   const lastSound = {};
   let lastScore = -1;
@@ -246,6 +249,39 @@
       osc.stop(t + dur + 0.02);
     } catch (err) {
       audio = null;
+    }
+  }
+
+  function ensureMusic() {
+    if (!music) {
+      music = new Audio('assets/short-circuits.mp3');
+      music.loop = true;
+      music.preload = 'auto';
+      music.volume = MUSIC_VOLUME;
+    }
+    return music;
+  }
+
+  function playMusic() {
+    musicWanted = true;
+    if (muted) return;
+    const m = ensureMusic();
+    if (m.paused) {
+      const p = m.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+  }
+
+  function pauseMusic() {
+    if (music) music.pause();
+  }
+
+  function applyMute() {
+    el.btnMute.classList.toggle('off', muted);
+    if (muted) {
+      if (music) music.pause();
+    } else if (musicWanted) {
+      playMusic();
     }
   }
 
@@ -502,6 +538,7 @@
     resetBuffs();
     resetBall();
     hideOverlay();
+    playMusic();
   }
 
   function nextLevel() {
@@ -567,9 +604,11 @@
     if (state.mode === 'paused') {
       state.mode = state.prevMode || 'playing';
       hideOverlay();
+      if (musicWanted) playMusic();
     } else if (state.mode === 'playing' || state.mode === 'ready') {
       state.prevMode = state.mode;
       state.mode = 'paused';
+      pauseMusic();
       showOverlay('Pauza', 'Hra je pozastavena.', 'Pokracovat', togglePause);
     }
   }
@@ -1428,9 +1467,9 @@
   el.btnMute.addEventListener('click', () => {
     muted = !muted;
     localStorage.setItem('bb-muted', muted ? '1' : '0');
-    el.btnMute.classList.toggle('off', muted);
+    applyMute();
   });
-  el.btnMute.classList.toggle('off', muted);
+  applyMute();
 
   document.querySelectorAll('.pad-btn').forEach((btn) => {
     const action = btn.dataset.action;
@@ -1482,7 +1521,12 @@
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && (state.mode === 'playing' || state.mode === 'ready')) togglePause();
+    if (document.hidden) {
+      pauseMusic();
+      if (state.mode === 'playing' || state.mode === 'ready') togglePause();
+    } else if (musicWanted) {
+      playMusic();
+    }
   });
 
   syncHud();
