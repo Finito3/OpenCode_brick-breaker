@@ -170,6 +170,7 @@
     rowColors: [],
     theme: THEMES[0],
     corridors: [],
+    walls: [],
     balls: [],
     powerups: [],
     lasers: [],
@@ -254,7 +255,7 @@
 
   function ensureMusic() {
     if (!music) {
-      music = new Audio('assets/short-circuits.mp3');
+      music = new Audio('assets/neon-gaming.mp3');
       music.loop = true;
       music.preload = 'auto';
       music.volume = MUSIC_VOLUME;
@@ -509,6 +510,11 @@
 
     state.grid = grid;
     state.corridors = corridors;
+    state.walls = [];
+    const wallY = GRID.top + barrierRow * STEPY;
+    const wallH = GRID.h * 2 + GRID.gap;
+    state.walls.push({ x: 0, y: wallY, w: GRID.marginX, h: wallH, type: 'steel', alive: true });
+    state.walls.push({ x: W - GRID.marginX, y: wallY, w: GRID.marginX, h: wallH, type: 'steel', alive: true });
     state.destructible = destructible;
     state.powerups = [];
     state.lasers = [];
@@ -806,7 +812,7 @@
     const wasBomb = brick.type === 'bomb';
     const destroyed = damageBrick(brick, 1);
     if (destroyed && wasBomb) explodeAt(cx, cy, 80);
-    if (destroyed || state.buffs.fire > 0) return;
+    if (state.buffs.fire > 0) return;
     bounceOffBrick(b, brick);
   }
 
@@ -831,6 +837,18 @@
         handleBrickHit(b, brick);
         return;
       }
+    }
+  }
+
+  function collideWalls(b) {
+    for (const wall of state.walls) {
+      const nx = clamp(b.x, wall.x, wall.x + wall.w);
+      const ny = clamp(b.y, wall.y, wall.y + wall.h);
+      if (dist2(b.x, b.y, nx, ny) > b.r * b.r) continue;
+      bounceOffBrick(b, wall);
+      spawnBurst(b.x, b.y, '#dbe5f5', 2, 90);
+      sound('steel');
+      return;
     }
   }
 
@@ -962,6 +980,7 @@
         reflectPaddle(b);
         if (b.stuck) break;
         collideBricks(b);
+        collideWalls(b);
       }
 
       if (b.y - b.r > H + 24) {
@@ -1209,6 +1228,9 @@
         const b = row[c];
         if (b && b.alive) drawBrick(bctx, b);
       }
+    }
+    for (const wall of state.walls) {
+      if (wall.alive) drawBrick(bctx, wall);
     }
     state.brickDirty = false;
   }
@@ -1534,7 +1556,7 @@
   state.balls = [];
   showOverlay(
     'BRICK BREAKER: INSANE',
-    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr! Po zniceni kostky kulicka proleti dal. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
+    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
     'Hrat',
     startGame
   );

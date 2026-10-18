@@ -9,7 +9,7 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 
 - Husta mozaika malych kostek (36 x 28 bunek) ukryta za ocelovou zdi.
 - **Mala skulina + uzka ulicka** - kulicka musi proskakat ulickou, aby se dostala dovnitr.
-- Po zniceni kostky kulicka proleti dal, takze v komnate nadela poradnou paseku.
+- Kulicka se odrazi od kazde kostky, takze kazdy vstup do komnaty je poradna vyzva.
 - Vice skulin a ulicek vyssich levelech (az 3 vstupy).
 - Obrazce z prazdnych bunek: logo N se srdcem, hvezda, srdce, lebka, smajlik, diamant.
 - 6 tematickych levelu s rostouci obtiznosti, 5 zivotu.
@@ -38,7 +38,7 @@ Ocelove kostky jsou neznicitelne vzdy - ani bomb ball nebo fireball je nerozbije
 
 ## Hudba
 
-- `assets/short-circuits.mp3` - "Short Circuits - Classic Arcade Game" od Dream-Protocol, stazeno z Pixabay (https://pixabay.com/music/video-games-short-circuits-classic-arcade-game-116824/), licence Pixabay Content License (zdarma i komercne, bez atribuce).
+- `assets/neon-gaming.mp3` - "Neon Gaming" od dopestuff, stazeno z Pixabay (https://pixabay.com/music/synthwave-neon-gaming-128925/), licence Pixabay Content License (zdarma i komercne, bez atribuce).
 
 ## Ovladani
 
