@@ -33,14 +33,15 @@
       <section class="stage">
         <canvas id="game" width="960" height="640" aria-label="Brick breaker"></canvas>
 
+        <div class="combo" id="combo" hidden>COMBO x1</div>
         <div class="buffs" id="buffs" aria-live="polite"></div>
 
         <div class="overlay" id="overlay">
           <div class="panel">
-            <h1 class="panel-title" id="overlayTitle">Brick Breaker</h1>
+            <h1 class="panel-title" id="overlayTitle">Brick Breaker: Insane</h1>
             <p class="panel-text" id="overlayText">
-              Hraj mysi, prstem nebo sipkami. Rozbij vsechny barevne kostky.
-              Ocelove kostky jsou neznicitelne - odrazej se od nich!
+              Stovky malych kostek tvori obrazce. Rozbij je vsechny, chytej bonusy
+              a zvysuj combo. Ocelove kostky jsou neznicitelne - odrazej se od nich!
             </p>
             <button class="primary-btn" id="overlayBtn" type="button">Hrat</button>
             <p class="panel-hint">Mezernik = start / vystrelit, P = pauza</p>
@@ -49,9 +50,10 @@
 
         <div class="legend">
           <span class="legend-item"><i class="swatch swatch-normal"></i>normal</span>
-          <span class="legend-item"><i class="swatch swatch-tough"></i>tvrdy (2x)</span>
-          <span class="legend-item"><i class="swatch swatch-steel"></i>ocel (nerozbitna)</span>
-          <span class="legend-item"><i class="swatch swatch-fire"></i>fireball probiji</span>
+          <span class="legend-item"><i class="swatch swatch-tough"></i>tvrdy</span>
+          <span class="legend-item"><i class="swatch swatch-steel"></i>ocel</span>
+          <span class="legend-item"><i class="swatch swatch-bomb"></i>bomba</span>
+          <span class="legend-item"><i class="swatch swatch-gold"></i>zlata</span>
         </div>
       </section>
 

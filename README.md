@@ -1,28 +1,35 @@
-# Brick Breaker
+# Brick Breaker: Insane
 
-Klasicka HTML5 brick breaker hra bez zavislosti. Staci otevrit `index.html` v prohlizeci.
+Klasicka HTML5 brick breaker hra bez zavislosti, ale v "insane crazy" podani:
+stovky malych kostek tvori mozaikove obrazce a ve hre lita spousta kulicek,
+vybuchu a bonusu. Staci otevrit `index.html` v prohlizeci.
 
 ## Funkce
 
-- Klasicka mrizka kostek s odrazem kulicky od palky podle mista zasahu.
-- **Neznicitelne ocelove kostky** - kulicka se od nich odrazi, nelze je rozbit (ani fireballem).
-- **Nasobeni kulicek (multiball)** a dalsi bonusy.
-- 6 levelu s rostouci obtiznosti, skore, zivoty a bonusy za dokonceni levelu.
-- Zvuky generovane pres WebAudio (lze vypnout), castice, trail kulicky.
+- Husta mozaika az ~1000 malych kostek (36 x 28 bunek) na jednu uroven.
+- Obrazce z prazdnych bunek: logo N se srdcem, hvezda, srdce, lebka, smajlik, diamant.
+- 6 tematickych levelu s rostouci obtiznosti.
+- **Combo system** - kazda znicena kostka zvysuje combo, nasobek skore az x25.
+- **Vybusne kostky** - tmave bomby po zniceni exploduji a spousti retezove reakce.
+- **Zlate kostky** - velky bonus a zaruceny power-up.
+- **Neznicitelne ocelove kostky** - odrazeji kulicku, nelze je rozbit ani fireballem.
+- Screen shake, castice, plovouci texty a zvuky generovane pres WebAudio (lze vypnout).
 
 ## Bonusy
 
 | Bonus | Vyznam |
 |-------|--------|
-| M (zelena) | Multiball - pribudou 2 kulicky |
+| M (zelena) | Multi - pribudou 3 kulicky |
+| X (ruzova) | Crazy - pribudne 8 kulicek a fireball |
 | W (modra) | Sirsi palka na 16 s |
 | S (tyrkysova) | Pomale kulicky na 9 s |
-| + (cervena) | Extra zivot |
 | L (oranzova) | Laser - palka automaticky strili na 13 s |
 | C (fialova) | Lepiva palka - kulicku chyti, vystrelis znovu |
 | F (zluta) | Fireball - kulicka prochazi pres barevne kostky na 10 s |
+| B (cervena) | Bomb ball - kazdy zasah kostky vybuchne na 9 s |
+| + (cervena) | Extra zivot |
 
-Ocelove kostky jsou neznicitelne vzdy - ani fireball je nerozbije.
+Ocelove kostky jsou neznicitelne vzdy - ani bomb ball nebo fireball je nerozbije.
 
 ## Ovladani
 
@@ -74,4 +81,3 @@ git clone https://github.com/Finito3/OpenCode_brick-breaker.git /var/www/brick-b
 ```
 
 Aktualizace je pak jen `cd /var/www/brick-breaker && git pull --ff-only`.
-
