@@ -161,7 +161,7 @@
     mode: 'menu',
     prevMode: 'playing',
     score: 0,
-    lives: 3,
+    lives: 5,
     level: 1,
     combo: 0,
     comboTimer: 0,
@@ -169,6 +169,7 @@
     destructible: 0,
     rowColors: [],
     theme: THEMES[0],
+    corridors: [],
     balls: [],
     powerups: [],
     lasers: [],
@@ -341,6 +342,30 @@
     };
   }
 
+  const LEVEL_GAPS = [
+    [9],
+    [7, 26],
+    [26],
+    [11, 24],
+    [5],
+    [5, 17, 29],
+  ];
+
+  function makeBrick(r, c, type, hp) {
+    return {
+      x: GRID.marginX + c * STEPX,
+      y: GRID.top + r * STEPY,
+      w: BW,
+      h: GRID.h,
+      row: r,
+      col: c,
+      type,
+      hp: type === 'steel' ? Infinity : hp,
+      maxHp: type === 'steel' ? Infinity : hp,
+      alive: true,
+    };
+  }
+
   function buildLevel() {
     const level = state.level;
     const theme = THEMES[(level - 1) % THEMES.length];
@@ -351,55 +376,103 @@
       state.rowColors.push(shade(theme.base, amt));
     }
 
-    const motif = MOTIFS[(level - 1) % MOTIFS.length];
-    const grid = [];
-    let destructible = 0;
+    const barrierRow = 14 + (level % 3);
+    const gapWidth = 2;
+    const gapStarts = LEVEL_GAPS[(level - 1) % LEVEL_GAPS.length];
+    const corridorLen = 6 + (level % 2);
 
-    for (let r = 0; r < GRID.rows; r++) {
-      const row = [];
+    const grid = [];
+    for (let r = 0; r < GRID.rows; r++) grid.push(new Array(GRID.cols).fill(null));
+
+    const motif = MOTIFS[(level - 1) % MOTIFS.length];
+    const copies = level === 1 ? 1 : level % 2 === 0 ? 2 : 3;
+    const chamberCY = GRID.top + (barrierRow * STEPY) / 2;
+    const scale = (barrierRow * STEPY) / 2 / 1.22;
+
+    for (let r = 1; r < barrierRow; r++) {
       for (let c = 0; c < GRID.cols; c++) {
-        const x = GRID.marginX + c * STEPX;
-        const y = GRID.top + r * STEPY;
-        const nx = (x + BW / 2 - FIELD_CX) / MOTIF_SCALE;
-        const ny = (y + GRID.h / 2 - FIELD_CY) / MOTIF_SCALE;
-        if (motif(nx, ny)) {
-          row.push(null);
-          continue;
+        const px = GRID.marginX + c * STEPX + BW / 2;
+        const py = GRID.top + r * STEPY + GRID.h / 2;
+        let hole = false;
+        for (let k = 0; k < copies; k++) {
+          const cx = (W * (k + 1)) / (copies + 1);
+          if (motif((px - cx) / scale, (py - chamberCY) / scale)) {
+            hole = true;
+            break;
+          }
         }
+        if (hole) continue;
 
         let type = 'normal';
         let hp = 1;
         const roll = Math.random();
-        if (roll < 0.024) {
+        if (roll < 0.026) {
           type = 'bomb';
-        } else if (roll < 0.034) {
+        } else if (roll < 0.036) {
           type = 'gold';
-        } else if (level >= 2 && roll < 0.052 + level * 0.006) {
+        } else if (level >= 2 && roll < 0.055 + level * 0.006) {
           type = 'tough';
           hp = level >= 5 ? 3 : 2;
-        } else if (level >= 3 && roll < 0.062 + level * 0.005) {
+        } else if (level >= 3 && roll < 0.068 + level * 0.005) {
           type = 'steel';
         }
-
-        const brick = {
-          x,
-          y,
-          w: BW,
-          h: GRID.h,
-          row: r,
-          col: c,
-          type,
-          hp: type === 'steel' ? Infinity : hp,
-          maxHp: type === 'steel' ? Infinity : hp,
-          alive: true,
-        };
-        if (type !== 'steel') destructible++;
-        row.push(brick);
+        grid[r][c] = makeBrick(r, c, type, hp);
       }
-      grid.push(row);
+    }
+
+    const corridors = [];
+    for (const start of gapStarts) {
+      const gs = clamp(start, 2, GRID.cols - gapWidth - 2);
+      const ge = gs + gapWidth - 1;
+      corridors.push({
+        gapStart: gs,
+        gapEnd: ge,
+        gapWidth,
+        topRow: barrierRow,
+        bottomRow: barrierRow + 1 + corridorLen,
+      });
+
+      for (let r = Math.max(1, barrierRow - 4); r < barrierRow; r++) {
+        for (let c = gs - 3; c <= ge + 3; c++) {
+          if (c >= 0 && c < GRID.cols) grid[r][c] = null;
+        }
+      }
+
+      for (let i = 0; i < corridorLen; i++) {
+        const r = barrierRow + 2 + i;
+        if (r >= GRID.rows) break;
+        let spread = 0;
+        if (i >= corridorLen - 3) spread = i - (corridorLen - 3);
+        const lc = gs - 1 - spread;
+        const rc = ge + 1 + spread;
+        if (lc >= 0 && lc < GRID.cols) grid[r][lc] = makeBrick(r, lc, 'steel', 1);
+        if (rc >= 0 && rc < GRID.cols) grid[r][rc] = makeBrick(r, rc, 'steel', 1);
+      }
+    }
+
+    for (let r = barrierRow; r < barrierRow + 2 && r < GRID.rows; r++) {
+      for (let c = 0; c < GRID.cols; c++) {
+        let inGap = false;
+        for (const co of corridors) {
+          if (c >= co.gapStart && c <= co.gapEnd) {
+            inGap = true;
+            break;
+          }
+        }
+        if (!inGap) grid[r][c] = makeBrick(r, c, 'steel', 1);
+      }
+    }
+
+    let destructible = 0;
+    for (let r = 0; r < GRID.rows; r++) {
+      for (let c = 0; c < GRID.cols; c++) {
+        const b = grid[r][c];
+        if (b && b.type !== 'steel') destructible++;
+      }
     }
 
     state.grid = grid;
+    state.corridors = corridors;
     state.destructible = destructible;
     state.powerups = [];
     state.lasers = [];
@@ -420,7 +493,7 @@
 
   function startGame() {
     state.score = 0;
-    state.lives = 3;
+    state.lives = 5;
     state.level = 1;
     state.combo = 0;
     state.comboTimer = 0;
@@ -557,7 +630,7 @@
   function brickColor(b) {
     switch (b.type) {
       case 'steel':
-        return '#8b96b2';
+        return '#5a6482';
       case 'tough':
         return '#ff5f4a';
       case 'bomb':
@@ -694,7 +767,7 @@
     const wasBomb = brick.type === 'bomb';
     const destroyed = damageBrick(brick, 1);
     if (destroyed && wasBomb) explodeAt(cx, cy, 80);
-    if (state.buffs.fire > 0) return;
+    if (destroyed || state.buffs.fire > 0) return;
     bounceOffBrick(b, brick);
   }
 
@@ -1132,6 +1205,38 @@
     ctx.strokeRect(GRID.marginX - 5, GRID.top - 5, FIELD_W + 10, FIELD_H + 10);
   }
 
+  function drawCorridorMarkers(time) {
+    if (!state.corridors.length) return;
+    ctx.save();
+    for (const co of state.corridors) {
+      const x = GRID.marginX + co.gapStart * STEPX;
+      const w = co.gapWidth * STEPX - GRID.gap;
+      const top = GRID.top + co.topRow * STEPY;
+      const bottom = GRID.top + (co.bottomRow + 1) * STEPY - GRID.gap;
+      const pulse = 0.5 + 0.5 * Math.sin(time * 3 + co.gapStart);
+
+      ctx.globalAlpha = 0.05 + 0.05 * pulse;
+      ctx.fillStyle = state.theme.accent;
+      ctx.fillRect(x, top, w, bottom - top);
+
+      ctx.globalAlpha = 0.45 + 0.4 * pulse;
+      ctx.strokeStyle = state.theme.accent;
+      ctx.lineWidth = 2;
+      const ax = x + w / 2;
+      const ay = bottom - 3;
+      for (let i = 0; i < 3; i++) {
+        const yy = ay - i * 7;
+        ctx.beginPath();
+        ctx.moveTo(ax - 8, yy + 5);
+        ctx.lineTo(ax, yy - 2);
+        ctx.lineTo(ax + 8, yy + 5);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
   function drawPaddle() {
     const p = state.paddle;
     const x = p.cx - p.w / 2;
@@ -1262,7 +1367,7 @@
     ctx.font = 'bold 19px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Klikni nebo stiskni mezernik pro vystreleni', W / 2, H - 108);
+    ctx.fillText('Klikni / mezernik. Zamer kulicku do male skuliny v ocelove zdi', W / 2, H - 108);
     ctx.globalAlpha = 1;
   }
 
@@ -1280,6 +1385,7 @@
     if (state.brickDirty) redrawBricks();
     ctx.drawImage(brickLayer, 0, 0);
     drawFieldFrame();
+    drawCorridorMarkers(time);
     drawPowerups();
     drawLasers();
     drawPaddle();
@@ -1384,7 +1490,7 @@
   state.balls = [];
   showOverlay(
     'BRICK BREAKER: INSANE',
-    'Stovky malych kostek tvori obrazce. Rozbij je vsechny! Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne, tmave bomby a zlate kostky nadeli poradnou porci bodu.',
+    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr! Po zniceni kostky kulicka proleti dal. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
     'Hrat',
     startGame
   );
