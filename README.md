@@ -11,6 +11,7 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 - **Mala skulina + uzka ulicka** - kulicka musi proskakat ulickou, aby se dostala dovnitr.
 - Kulicka se odrazi od kazde kostky, takze kazdy vstup do komnaty je poradna vyzva.
 - Vice skulin a ulicek vyssich levelech (az 3 vstupy).
+- V komnate nejsou zadne neznicitelne kostky, takze level jde vzdy dokoncit.
 - Obrazce z prazdnych bunek: logo N se srdcem, hvezda, srdce, lebka, smajlik, diamant.
 - 6 tematickych levelu s rostouci obtiznosti, 5 zivotu.
 - Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).

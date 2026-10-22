@@ -475,7 +475,8 @@
           type = 'tough';
           hp = level >= 5 ? 3 : 2;
         } else if (level >= 3 && roll < 0.068 + level * 0.005) {
-          type = 'steel';
+          type = 'tough';
+          hp = 3;
         }
         grid[r][c] = makeBrick(r, c, type, hp);
       }
