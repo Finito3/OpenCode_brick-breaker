@@ -30,6 +30,9 @@
   const FIELD_H = GRID.rows * STEPY - GRID.gap;
   const FIELD_CX = GRID.marginX + FIELD_W / 2;
   const FIELD_CY = GRID.top + FIELD_H / 2;
+  const PLAY_LEFT = GRID.marginX;
+  const PLAY_RIGHT = W - GRID.marginX;
+  const PLAY_TOP = GRID.top;
   const STEEL_COLOR = '#a8bfd0';
   const PADDLE = { baseW: 130, h: 12, y: H - 46, speed: 950 };
   const BALL_R = 4;
@@ -658,7 +661,7 @@
   }
 
   function movePaddleTo(cx) {
-    state.paddle.cx = clamp(cx, state.paddle.w / 2, W - state.paddle.w / 2);
+    state.paddle.cx = clamp(cx, PLAY_LEFT + state.paddle.w / 2, PLAY_RIGHT - state.paddle.w / 2);
   }
 
   function pointerX(e) {
@@ -973,17 +976,17 @@
         b.x += b.vx * sdt;
         b.y += b.vy * sdt;
 
-        if (b.x - b.r < 0) {
-          b.x = b.r;
+        if (b.x - b.r < PLAY_LEFT) {
+          b.x = PLAY_LEFT + b.r;
           b.vx = Math.abs(b.vx);
           sound('bounce');
-        } else if (b.x + b.r > W) {
-          b.x = W - b.r;
+        } else if (b.x + b.r > PLAY_RIGHT) {
+          b.x = PLAY_RIGHT - b.r;
           b.vx = -Math.abs(b.vx);
           sound('bounce');
         }
-        if (b.y - b.r < 0) {
-          b.y = b.r;
+        if (b.y - b.r < PLAY_TOP) {
+          b.y = PLAY_TOP + b.r;
           b.vy = Math.abs(b.vy);
           sound('bounce');
         }
@@ -1020,7 +1023,7 @@
 
     const target = PADDLE.baseW * (state.buffs.wide > 0 ? 1.6 : 1);
     p.w += (target - p.w) * Math.min(1, dt * 12);
-    p.cx = clamp(p.cx, p.w / 2, W - p.w / 2);
+    p.cx = clamp(p.cx, PLAY_LEFT + p.w / 2, PLAY_RIGHT - p.w / 2);
   }
 
   function updateBuffs(dt) {
