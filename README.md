@@ -2,23 +2,25 @@
 
 Klasicka HTML5 brick breaker hra bez zavislosti, ale v "insane crazy" podani:
 kostky se skryvaji za ocelovou zdi, do ktere vede jen mala centralni skulina.
-Hrac musi kulicku do skuliny trefit - teprve pak se dostane do bludiste
-znicitelnych kostek. Staci otevrit `index.html` v prohlizeci.
+Hrac musi kulicku do skuliny presne trefit a projit zkroucenou chodbou
+z neznicitelnych ocelovych bloku - teprve na jejim konci se dostane ke
+znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 
 ## Funkce
 
-- Husta jednobarevna mrizka drobnych kostek (72 x 48 bunek) s vyrezanym cernym bludistem a svetlym obrysem.
-- **Mala centralni skulina + kratka vstupni chodba** do bludiste.
-- Kulicka se odrazi od kazde kostky, takze kazdy vstup do bludiste je poradna vyzva.
-- Svetly obrys bludiste je tvrdy (2 zasahy), ale pruselny; level jde vzdy dokoncit.
+- Husta jednobarevna mrizka drobnych kostek (72 x 48 bunek) za ocelovou zdi.
+- **Mala centralni skulina (1 bunka)** - mireni musi byt co nejpresnejsi.
+- **Zkroucena chodba z neznicitelnych ocelovych bloku** - kulicka musi projit dlouhou cestu, nez se dostane ke kostkam.
+- Kulicka se odrazi od kazde kostky, takze kazdy vstup do kostkoveho pole je poradna vyzva.
+- V kostkovem poli nejsou neznicitelne kostky, takze level jde vzdy dokoncit.
+- Kdyz zbyva poslednich par kostek, ocelove steny povoli a otevre se cesta ke zbytku.
 - Mala kulicka (polomer 4) a drobne kostky - poradne husty a chaosem nabity feeling.
 - 6 tematickych levelu s jinym barevnym ladenim a jinym tvarem bludiste, 5 zivotu.
 - Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).
 - Skalovani hraci plochy podle displeje (ostre i na 4K a retina obrazovkach).
 - **Combo system** - kazda znicena kostka zvysuje combo, nasobek skore az x25.
-- **Vybusne kostky** - tmave bomby po zniceni exploduji a spousti retezove reakce.
 - **Zlate kostky** - velky bonus a zaruceny power-up.
-- **Neznicitelne ocelove kostky** - odrazeji kulicku, nelze je rozbit ani fireballem.
+- **Neznicitelne ocelove kostky** - odrazeji kulicku, nelze je rozbit.
 - Screen shake, castice, plovouci texty a zvuky generovane pres WebAudio (lze vypnout).
 
 ## Bonusy
@@ -26,16 +28,13 @@ znicitelnych kostek. Staci otevrit `index.html` v prohlizeci.
 | Bonus | Vyznam |
 |-------|--------|
 | M (zelena) | Multi - pribudou 3 kulicky |
-| X (ruzova) | Crazy - pribudne 8 kulicek a fireball |
+| X (ruzova) | Crazy - pribudne 8 kulicek |
 | W (modra) | Sirsi palka na 16 s |
 | S (tyrkysova) | Pomale kulicky na 9 s |
-| L (oranzova) | Laser - palka automaticky strili na 13 s |
 | C (fialova) | Lepiva palka - kulicku chyti, vystrelis znovu |
-| F (zluta) | Fireball - kulicka prochazi pres barevne kostky na 10 s |
-| B (cervena) | Bomb ball - kazdy zasah kostky vybuchne na 9 s |
 | + (cervena) | Extra zivot |
 
-Ocelove kostky jsou neznicitelne vzdy - ani bomb ball nebo fireball je nerozbije.
+Ocelove zdi a bloky jsou neznicitelne vzdy. Hra je bez bomb, fireballu a laseru - o to vic zalezi na presnem mireni a cisteni pole.
 
 ## Hudba
 

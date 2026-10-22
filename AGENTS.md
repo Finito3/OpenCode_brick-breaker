@@ -1,7 +1,7 @@
 # AGENTS.md - Brick Breaker
 
 ## Projekt
-- Staticka HTML5 hra brick breaker s ocelovou zdi, centralnim vstupem a bludistem z drobnych kostek (canvas, ciste HTML/CSS/JS, bez zavislosti).
+- Staticka HTML5 hra brick breaker s ocelovou zdi, jednobunkovym vstupem a zkroucenou ocelovou chodbou k poli drobnych kostek (canvas, ciste HTML/CSS/JS, bez zavislosti).
 - Vstupni bod: `index.html`, herni logika: `game.js`, styly: `style.css`.
 
 ## Git repozitar projektu (POVINNE)

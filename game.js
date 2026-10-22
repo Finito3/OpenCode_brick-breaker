@@ -71,15 +71,12 @@
   ];
 
   const POWER_DEFS = {
-    multi: { color: '#4be08a', label: 'M', name: 'MULTI', weight: 20 },
-    crazy: { color: '#ff4fd8', label: 'X', name: 'CRAZY', weight: 10 },
-    wide: { color: '#56b8ff', label: 'W', name: 'WIDE', weight: 10 },
-    slow: { color: '#6ff0e0', label: 'S', name: 'SLOW', weight: 8 },
-    laser: { color: '#ff9d4d', label: 'L', name: 'LASER', weight: 12 },
-    sticky: { color: '#c78bff', label: 'C', name: 'STICKY', weight: 6 },
-    fire: { color: '#ffd45e', label: 'F', name: 'FIREBALL', weight: 18 },
-    bomb: { color: '#ff6b4a', label: 'B', name: 'BOMB BALL', weight: 18 },
-    life: { color: '#ff5f7a', label: '+', name: 'LIFE', weight: 6 },
+    multi: { color: '#4be08a', label: 'M', name: 'MULTI', weight: 30 },
+    crazy: { color: '#ff4fd8', label: 'X', name: 'CRAZY', weight: 14 },
+    wide: { color: '#56b8ff', label: 'W', name: 'WIDE', weight: 16 },
+    slow: { color: '#6ff0e0', label: 'S', name: 'SLOW', weight: 14 },
+    sticky: { color: '#c78bff', label: 'C', name: 'STICKY', weight: 10 },
+    life: { color: '#ff5f7a', label: '+', name: 'LIFE', weight: 8 },
   };
   const POWER_KEYS = Object.keys(POWER_DEFS);
   const POWER_TOTAL = POWER_KEYS.reduce((s, k) => s + POWER_DEFS[k].weight, 0);
@@ -96,6 +93,7 @@
     destructible: 0,
     barrierRow: 32,
     mazeCells: new Set(),
+    vaultOpened: false,
     theme: THEMES[0],
     corridors: [],
     walls: [],
@@ -384,7 +382,7 @@
 
     const barrierRow = 31 + (level % 3);
     state.barrierRow = barrierRow;
-    const gapWidth = 2;
+    const gapWidth = 1;
     const gapStart = clamp(LEVEL_GAPS[(level - 1) % LEVEL_GAPS.length][0], 3, GRID.cols - gapWidth - 3);
     const gapEnd = gapStart + gapWidth - 1;
 
@@ -403,11 +401,9 @@
         let type = 'normal';
         let hp = 1;
         const roll = Math.random();
-        if (roll < 0.006) {
-          type = 'bomb';
-        } else if (roll < 0.008) {
+        if (roll < 0.004) {
           type = 'gold';
-        } else if (roll < 0.008 + level * 0.001) {
+        } else if (roll < 0.012 + level * 0.001) {
           type = 'tough';
           hp = level >= 5 ? 3 : 2;
         }
@@ -417,94 +413,88 @@
 
     const inChamber = (c, r) => c >= 0 && c < GRID.cols && r >= 1 && r < barrierRow;
     const keyOf = (c, r) => r * GRID.cols + c;
-    const maze = new Set();
+    const laneB = gapStart;
+    const laneA = Math.max(6, gapStart - 18 - (level % 3) * 3);
+    const laneC = Math.min(GRID.cols - 9, gapStart + 18 + (level % 3) * 3);
+    const cw = 4;
+    const y0 = barrierRow - 1;
+    const y1 = barrierRow - 9;
+    const y2 = y1 - 9;
+    const y3 = y2 - 9;
+    let lane1 = level % 2 ? laneA : laneC;
+    let lane2 = level % 2 ? laneC : laneA;
+    if (lane1 === lane2) lane1 = laneA;
+    const chute = new Set();
+
     const carve = (c, r) => {
       if (!inChamber(c, r)) return;
-      maze.add(keyOf(c, r));
+      chute.add(keyOf(c, r));
       grid[r][c] = null;
     };
-
-    const marginX = 8 + (level % 3) * 2;
-    const marginTop = 3 + (level % 2);
-    const marginBottom = 4;
-    const L = marginX;
-    const R = GRID.cols - 1 - marginX;
-    const T = 1 + marginTop;
-    const B = barrierRow - 1 - marginBottom;
-    const cw = 3;
-    const step = 8;
-    const gapPlans = [];
-
-    for (let ring = 0; ; ring++) {
-      const l = L + ring * step;
-      const r = R - ring * step;
-      const t = T + ring * step;
-      const b = B - ring * step;
-      if (r - l < cw + 4 || b - t < cw + 4) break;
-
-      for (let y = t; y < t + cw; y++) {
-        for (let x = l; x <= r; x++) carve(x, y);
+    const carveRect = (x0, y0, x1, y1) => {
+      for (let r = y0; r <= y1; r++) {
+        for (let c = x0; c <= x1; c++) carve(c, r);
       }
-      for (let x = r - cw + 1; x <= r; x++) {
-        for (let y = t; y <= b; y++) carve(x, y);
-      }
-      for (let y = b - cw + 1; y <= b; y++) {
-        for (let x = l; x <= r; x++) carve(x, y);
-      }
-      for (let x = l; x < l + cw; x++) {
-        for (let y = t; y <= b; y++) carve(x, y);
-      }
+    };
 
-      const sides = ring === 0 ? [0, 1, 3] : [0, 1, 2, 3];
-      const side = sides[Math.floor(Math.random() * sides.length)];
-      const gapLen = 3 + Math.floor(Math.random() * 3);
-      if (side === 0 || side === 2) {
-        const y0 = side === 0 ? t : b - cw + 1;
-        const span = Math.max(1, r - l - gapLen - 5);
-        const x0 = l + 3 + Math.floor(Math.random() * span);
-        gapPlans.push({ x0, y0, x1: Math.min(r - 2, x0 + gapLen - 1), y1: y0 + cw - 1 });
-      } else {
-        const x0 = side === 3 ? l : r - cw + 1;
-        const span = Math.max(1, b - t - gapLen - 5);
-        const y0 = t + 3 + Math.floor(Math.random() * span);
-        gapPlans.push({ x0, y0, x1: x0 + cw - 1, y1: Math.min(b - 2, y0 + gapLen - 1) });
-      }
-    }
+    carveRect(laneB, y1, laneB + cw - 1, y0);
+    carveRect(Math.min(lane1, laneB), y1, Math.max(lane1, laneB) + cw - 1, y1 + cw - 1);
+    carveRect(lane1, y2, lane1 + cw - 1, y1 + cw - 1);
+    carveRect(Math.min(lane1, lane2), y2, Math.max(lane1, lane2) + cw - 1, y2 + cw - 1);
+    carveRect(lane2, y3, lane2 + cw - 1, y2 + cw - 1);
+    carveRect(Math.min(laneB, lane2), y3, Math.max(laneB, lane2) + cw - 1, y3 + cw - 1);
+    carveRect(laneB, 1, laneB + cw - 1, y3 + cw - 1);
 
-    for (let rr = Math.max(1, B); rr < barrierRow; rr++) {
-      carve(gapStart, rr);
-      carve(gapEnd, rr);
-    }
-
-    const outline = new Set();
-    for (const k of maze) {
+    const steel = new Set();
+    for (const k of chute) {
       const c = k % GRID.cols;
       const r = (k / GRID.cols) | 0;
       for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nc = c + dc;
         const nr = r + dr;
-        if (inChamber(nc, nr) && !maze.has(keyOf(nc, nr))) outline.add(keyOf(nc, nr));
+        if (!inChamber(nc, nr)) continue;
+        if (nr <= 2) continue;
+        const nk = keyOf(nc, nr);
+        if (chute.has(nk)) continue;
+        steel.add(nk);
       }
     }
 
-    const outlineColor = shade(theme.base, 0.48);
-    for (const k of outline) {
+    for (const k of steel) {
       const c = k % GRID.cols;
       const r = (k / GRID.cols) | 0;
-      grid[r][c] = makeBrick(r, c, 'tough', 2, outlineColor);
+      grid[r][c] = makeBrick(r, c, 'steel', 1);
     }
 
-    for (const g of gapPlans) {
-      for (let r = g.y0; r <= g.y1; r++) {
-        for (let c = g.x0; c <= g.x1; c++) {
-          if (!inChamber(c, r)) continue;
-          const k = keyOf(c, r);
-          if (!maze.has(k)) continue;
-          maze.delete(k);
-          grid[r][c] = makeBrick(r, c, 'normal', 1, colorFor(r, c, 'normal'));
-        }
+    const openCell = (c, r) => {
+      if (!inChamber(c, r)) return;
+      chute.add(keyOf(c, r));
+      grid[r][c] = null;
+    };
+    const addVerticalDoor = (lane, yA, yB, side) => {
+      const wallX = side < 0 ? lane - 1 : lane + cw;
+      const fieldX = side < 0 ? lane - 2 : lane + cw + 1;
+      const mid = Math.floor((yA + yB) / 2);
+      for (let r = mid; r <= mid + 1; r++) {
+        openCell(wallX, r);
+        openCell(fieldX, r);
       }
-    }
+    };
+    const addHorizontalDoor = (y, xA, xB, side) => {
+      const wallY = side < 0 ? y - 1 : y + cw;
+      const fieldY = side < 0 ? y - 2 : y + cw + 1;
+      const mid = Math.floor((xA + xB) / 2);
+      for (let c = mid; c <= mid + 1; c++) {
+        openCell(c, wallY);
+        openCell(c, fieldY);
+      }
+    };
+
+    addHorizontalDoor(y1, Math.min(laneB, lane1), Math.max(laneB, lane1) + cw - 1, level % 2 ? -1 : 1);
+    addVerticalDoor(lane1, y2, y1 + cw - 1, level % 2 ? 1 : -1);
+    addHorizontalDoor(y2, Math.min(lane1, lane2), Math.max(lane1, lane2) + cw - 1, level % 2 ? -1 : 1);
+    addVerticalDoor(lane2, y3, y2 + cw - 1, level % 2 ? 1 : -1);
+    addHorizontalDoor(y3, Math.min(laneB, lane2), Math.max(laneB, lane2) + cw - 1, level % 2 ? -1 : 1);
 
     for (let rr = barrierRow; rr < barrierRow + 2 && rr < GRID.rows; rr++) {
       for (let c = 0; c < GRID.cols; c++) {
@@ -514,7 +504,7 @@
     }
 
     for (let rr = barrierRow; rr < barrierRow + 2 && rr < GRID.rows; rr++) {
-      for (let c = gapStart; c <= gapEnd; c++) maze.add(keyOf(c, rr));
+      for (let c = gapStart; c <= gapEnd; c++) chute.add(keyOf(c, rr));
     }
 
     const walls = [];
@@ -533,7 +523,8 @@
 
     state.grid = grid;
     state.walls = walls;
-    state.mazeCells = maze;
+    state.mazeCells = chute;
+    state.vaultOpened = false;
     state.corridors = [{ gapStart, gapEnd, gapWidth, topRow: barrierRow, bottomRow: barrierRow + 1 }];
     state.destructible = destructible;
     state.powerups = [];
@@ -545,9 +536,7 @@
     const swNormal = document.querySelector('.swatch-normal');
     if (swNormal) swNormal.style.background = shade(theme.base, 0.075);
     const swTough = document.querySelector('.swatch-tough');
-    if (swTough) swTough.style.background = outlineColor;
-    const swBomb = document.querySelector('.swatch-bomb');
-    if (swBomb) swBomb.style.background = shade(theme.base, -0.42);
+    if (swTough) swTough.style.background = shade(theme.base, 0.28);
   }
 
   function resetBall() {
@@ -905,7 +894,6 @@
         break;
       case 'crazy':
         spawnExtraBalls(8);
-        b.fire = Math.max(b.fire, 5);
         break;
       case 'wide':
         b.wide = 16;
@@ -918,18 +906,8 @@
         syncHud();
         sound('life');
         break;
-      case 'laser':
-        b.laser = 13;
-        state.laserCooldown = 0;
-        break;
       case 'sticky':
         b.sticky = 13;
-        break;
-      case 'fire':
-        b.fire = 10;
-        break;
-      case 'bomb':
-        b.bomb = 9;
         break;
       default:
         break;
@@ -1155,8 +1133,29 @@
     state.texts = keep;
   }
 
+  function maybeOpenVault() {
+    if (state.vaultOpened || state.destructible > 12) return;
+    state.vaultOpened = true;
+    let opened = 0;
+    for (let r = 1; r < state.barrierRow; r++) {
+      for (let c = 0; c < GRID.cols; c++) {
+        const b = state.grid[r][c];
+        if (b && b.type === 'steel') {
+          state.grid[r][c] = null;
+          opened++;
+        }
+      }
+    }
+    if (opened) {
+      state.brickDirty = true;
+      addText(state.paddle.cx, PADDLE.y - 40, 'OCEL POVOLILA!', '#ffd45e');
+      sound('level');
+    }
+  }
+
   function checkLevelClear() {
     if (state.mode !== 'playing') return;
+    maybeOpenVault();
     if (state.destructible > 0) return;
 
     state.mode = 'levelclear';
@@ -1611,7 +1610,7 @@
   state.balls = [];
   showOverlay(
     'BRICK BREAKER: INSANE',
-    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr - ceka te bludiste z barevnych kostek! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
+    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do male svitici skuliny a projdi zkroucenou chodbou z ocelovych bloku - teprve na jejim konci se dostanes ke kostkam! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, C sticky, + zivot. Svetle kostky jsou tvrdsi, sede ocelove zdi jsou neznicitelne, zlate kostky davaji bonus.',
     'Hrat',
     startGame
   );
