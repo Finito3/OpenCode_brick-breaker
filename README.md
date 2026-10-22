@@ -7,12 +7,13 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 
 ## Funkce
 
-- Husta mozaika malych kostek (36 x 28 bunek) ukryta za ocelovou zdi.
+- Husta mozaika malych kostek (72 x 48 bunek) ukryta za ocelovou zdi.
 - **Mala skulina + uzka ulicka** - kulicka musi proskakat ulickou, aby se dostala dovnitr.
 - Kulicka se odrazi od kazde kostky, takze kazdy vstup do komnaty je poradna vyzva.
 - Vice skulin a ulicek vyssich levelech (az 3 vstupy).
 - V komnate nejsou zadne neznicitelne kostky, takze level jde vzdy dokoncit.
-- Obrazce z prazdnych bunek: logo N se srdcem, hvezda, srdce, lebka, smajlik, diamant.
+- Soustredne barevne prstence z tisicu malych kostek, kazdy level s jinym barevnym ladenim.
+- Mala kulicka (polomer 4) a drobne kostky - poradne husty a chaosem nabity feeling.
 - 6 tematickych levelu s rostouci obtiznosti, 5 zivotu.
 - Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).
 - Skalovani hraci plochy podle displeje (ostre i na 4K a retina obrazovkach).

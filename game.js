@@ -22,7 +22,7 @@
   };
 
   const MAX_LEVEL = 6;
-  const GRID = { cols: 36, rows: 28, marginX: 24, top: 62, gap: 2, h: 13 };
+  const GRID = { cols: 72, rows: 48, marginX: 16, top: 40, gap: 1, h: 9 };
   const BW = (W - 2 * GRID.marginX - (GRID.cols - 1) * GRID.gap) / GRID.cols;
   const STEPX = BW + GRID.gap;
   const STEPY = GRID.h + GRID.gap;
@@ -30,9 +30,12 @@
   const FIELD_H = GRID.rows * STEPY - GRID.gap;
   const FIELD_CX = GRID.marginX + FIELD_W / 2;
   const FIELD_CY = GRID.top + FIELD_H / 2;
-  const MOTIF_SCALE = 190;
-  const PADDLE = { baseW: 140, h: 15, y: H - 46, speed: 950 };
-  const BALL_R = 7;
+  const RING_COLORS = [
+    '#ff4d5e', '#ff9f43', '#ffe14d', '#7dff6b',
+    '#3df5d0', '#4aa8ff', '#8a6bff', '#ff6bd6',
+  ];
+  const PADDLE = { baseW: 130, h: 12, y: H - 46, speed: 950 };
+  const BALL_R = 4;
   const MAX_BALLS = 60;
   const MAX_PARTICLES = 900;
 
@@ -71,92 +74,18 @@
   ];
 
   const POWER_DEFS = {
-    multi: { color: '#4be08a', label: 'M', name: 'MULTI', weight: 24 },
-    crazy: { color: '#ff4fd8', label: 'X', name: 'CRAZY', weight: 8 },
-    wide: { color: '#56b8ff', label: 'W', name: 'WIDE', weight: 12 },
-    slow: { color: '#6ff0e0', label: 'S', name: 'SLOW', weight: 10 },
-    laser: { color: '#ff9d4d', label: 'L', name: 'LASER', weight: 14 },
-    sticky: { color: '#c78bff', label: 'C', name: 'STICKY', weight: 8 },
-    fire: { color: '#ffd45e', label: 'F', name: 'FIREBALL', weight: 14 },
-    bomb: { color: '#ff6b4a', label: 'B', name: 'BOMB BALL', weight: 11 },
+    multi: { color: '#4be08a', label: 'M', name: 'MULTI', weight: 20 },
+    crazy: { color: '#ff4fd8', label: 'X', name: 'CRAZY', weight: 10 },
+    wide: { color: '#56b8ff', label: 'W', name: 'WIDE', weight: 10 },
+    slow: { color: '#6ff0e0', label: 'S', name: 'SLOW', weight: 8 },
+    laser: { color: '#ff9d4d', label: 'L', name: 'LASER', weight: 12 },
+    sticky: { color: '#c78bff', label: 'C', name: 'STICKY', weight: 6 },
+    fire: { color: '#ffd45e', label: 'F', name: 'FIREBALL', weight: 18 },
+    bomb: { color: '#ff6b4a', label: 'B', name: 'BOMB BALL', weight: 18 },
     life: { color: '#ff5f7a', label: '+', name: 'LIFE', weight: 6 },
   };
   const POWER_KEYS = Object.keys(POWER_DEFS);
   const POWER_TOTAL = POWER_KEYS.reduce((s, k) => s + POWER_DEFS[k].weight, 0);
-
-  const STAR = (() => {
-    const pts = [];
-    for (let i = 0; i < 10; i++) {
-      const a = -Math.PI / 2 + (i * Math.PI) / 5;
-      const r = i % 2 === 0 ? 1 : 0.45;
-      pts.push([Math.cos(a) * r, Math.sin(a) * r]);
-    }
-    return pts;
-  })();
-
-  function inPoly(x, y, pts) {
-    let inside = false;
-    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-      const xi = pts[i][0];
-      const yi = pts[i][1];
-      const xj = pts[j][0];
-      const yj = pts[j][1];
-      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-    return inside;
-  }
-
-  function distSeg(px, py, x1, y1, x2, y2) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const t = clamp(((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy), 0, 1);
-    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
-  }
-
-  function heartAt(nx, ny, cx, cy, s) {
-    const x = (nx - cx) / s;
-    const y = -(ny - cy) / s;
-    const a = x * x + y * y - 1;
-    return a * a * a - x * x * y * y * y < 0;
-  }
-
-  const MOTIFS = [
-    (nx, ny) => {
-      const x = nx + 0.06;
-      const y = ny + 0.02;
-      const halfH = 0.86;
-      const halfW = 0.92;
-      const t = 0.15;
-      const left = Math.abs(x + halfW) < t && Math.abs(y) < halfH;
-      const right = Math.abs(x - halfW) < t && Math.abs(y) < halfH;
-      const diag = distSeg(x, y, -halfW, -halfH, halfW, halfH) < t * 1.1;
-      const heart = heartAt(nx, ny, 0.32, -0.74, 0.25);
-      return left || right || diag || heart;
-    },
-    (nx, ny) => inPoly(nx / 1.02, ny / 1.02, STAR),
-    (nx, ny) => heartAt(nx, ny, 0, 0, 0.85),
-    (nx, ny) => {
-      const x = nx;
-      const y = ny;
-      const head = (x * x) / (0.64 * 0.64) + ((y + 0.05) * (y + 0.05)) / (0.72 * 0.72) < 1;
-      const jaw = Math.abs(x) < 0.34 && y > 0.36 && y < 0.74;
-      if (!head && !jaw) return false;
-      const eyeL = dist2(x, y, -0.25, -0.08) < 0.11 * 0.11;
-      const eyeR = dist2(x, y, 0.25, -0.08) < 0.11 * 0.11;
-      const nose = Math.abs(x) < 0.07 && y > 0.14 && y < 0.3;
-      if (eyeL || eyeR || nose) return false;
-      return true;
-    },
-    (nx, ny) => {
-      const r = Math.hypot(nx, ny);
-      const ring = r > 0.6 && r < 0.78;
-      const eyeL = dist2(nx, ny, -0.24, -0.14) < 0.1 * 0.1;
-      const eyeR = dist2(nx, ny, 0.24, -0.14) < 0.1 * 0.1;
-      const mouth = Math.abs(r - 0.44) < 0.055 && ny > 0.06;
-      return ring || eyeL || eyeR || mouth;
-    },
-    (nx, ny) => Math.abs(nx) / 1.02 + Math.abs(ny) / 0.88 < 1,
-  ];
 
   const state = {
     mode: 'menu',
@@ -212,7 +141,7 @@
     state.brickDirty = true;
   }
 
-  const stars = Array.from({ length: 110 }, () => ({
+  const stars = Array.from({ length: 70 }, () => ({
     x: Math.random() * W,
     y: Math.random() * H,
     r: Math.random() * 1.4 + 0.3,
@@ -404,15 +333,15 @@
   }
 
   const LEVEL_GAPS = [
-    [9],
-    [7, 26],
-    [26],
-    [11, 24],
-    [5],
-    [5, 17, 29],
+    [35],
+    [18, 54],
+    [45],
+    [14, 58],
+    [30],
+    [10, 36, 62],
   ];
 
-  function makeBrick(r, c, type, hp) {
+  function makeBrick(r, c, type, hp, color) {
     return {
       x: GRID.marginX + c * STEPX,
       y: GRID.top + r * STEPY,
@@ -421,6 +350,7 @@
       row: r,
       col: c,
       type,
+      color: color || null,
       hp: type === 'steel' ? Infinity : hp,
       maxHp: type === 'steel' ? Infinity : hp,
       alive: true,
@@ -437,48 +367,41 @@
       state.rowColors.push(shade(theme.base, amt));
     }
 
-    const barrierRow = 14 + (level % 3);
+    const barrierRow = 31 + (level % 3);
     const gapWidth = 2;
     const gapStarts = LEVEL_GAPS[(level - 1) % LEVEL_GAPS.length];
-    const corridorLen = 6 + (level % 2);
+    const corridorLen = 8 + (level % 2);
 
     const grid = [];
     for (let r = 0; r < GRID.rows; r++) grid.push(new Array(GRID.cols).fill(null));
 
-    const motif = MOTIFS[(level - 1) % MOTIFS.length];
-    const copies = level === 1 ? 1 : level % 2 === 0 ? 2 : 3;
-    const chamberCY = GRID.top + (barrierRow * STEPY) / 2;
-    const scale = (barrierRow * STEPY) / 2 / 1.22;
+    const chamberTop = 1;
+    const chamberBottom = barrierRow - 1;
+    const paletteShift = (level - 1) * 3;
 
-    for (let r = 1; r < barrierRow; r++) {
+    for (let r = chamberTop; r <= chamberBottom; r++) {
       for (let c = 0; c < GRID.cols; c++) {
-        const px = GRID.marginX + c * STEPX + BW / 2;
-        const py = GRID.top + r * STEPY + GRID.h / 2;
-        let hole = false;
-        for (let k = 0; k < copies; k++) {
-          const cx = (W * (k + 1)) / (copies + 1);
-          if (motif((px - cx) / scale, (py - chamberCY) / scale)) {
-            hole = true;
-            break;
-          }
-        }
-        if (hole) continue;
+        const dist = Math.min(c, GRID.cols - 1 - c, r - chamberTop, chamberBottom - r);
+
+        let sideIdx = 0;
+        if (c === dist) sideIdx = 3;
+        else if (GRID.cols - 1 - c === dist) sideIdx = 1;
+        else if (chamberBottom - r === dist) sideIdx = 2;
 
         let type = 'normal';
         let hp = 1;
         const roll = Math.random();
-        if (roll < 0.026) {
+        if (roll < 0.014) {
           type = 'bomb';
-        } else if (roll < 0.036) {
+        } else if (roll < 0.03) {
           type = 'gold';
-        } else if (level >= 2 && roll < 0.055 + level * 0.006) {
+        } else if (roll < 0.06 + level * 0.008) {
           type = 'tough';
           hp = level >= 5 ? 3 : 2;
-        } else if (level >= 3 && roll < 0.068 + level * 0.005) {
-          type = 'tough';
-          hp = 3;
         }
-        grid[r][c] = makeBrick(r, c, type, hp);
+
+        const color = RING_COLORS[(dist + sideIdx + paletteShift) % RING_COLORS.length];
+        grid[r][c] = makeBrick(r, c, type, hp, color);
       }
     }
 
@@ -708,7 +631,7 @@
       case 'gold':
         return '#ffd45e';
       default:
-        return state.rowColors[b.row];
+        return b.color || state.rowColors[b.row];
     }
   }
 
@@ -729,17 +652,23 @@
     state.powerups.push({
       x: brick.x + brick.w / 2,
       y: brick.y + brick.h / 2,
-      vy: 165,
-      r: 13,
+      vy: 150,
+      r: 8,
       rot: Math.random() * Math.PI,
       id,
     });
   }
 
+  function repaintBrick(brick) {
+    if (state.brickDirty) return;
+    bctx.clearRect(brick.x, brick.y, brick.w, brick.h);
+    if (brick.alive) drawBrick(bctx, brick);
+  }
+
   function destroyBrick(brick, silent) {
     if (!brick.alive || brick.type === 'steel') return false;
     brick.alive = false;
-    state.brickDirty = true;
+    repaintBrick(brick);
     state.destructible = Math.max(0, state.destructible - 1);
 
     const base = brick.type === 'gold' ? 250 : brick.type === 'bomb' ? 30 : brick.type === 'tough' ? 25 : 10;
@@ -765,7 +694,7 @@
       destroyBrick(brick);
       return true;
     }
-    state.brickDirty = true;
+    repaintBrick(brick);
     spawnBurst(brick.x + brick.w / 2, brick.y + brick.h / 2, brickColor(brick), 3, 120);
     sound('hit');
     return false;
@@ -1077,8 +1006,8 @@
       state.laserCooldown -= dt;
       if (state.laserCooldown <= 0) {
         state.laserCooldown = 0.26;
-        state.lasers.push({ x: p.cx - p.w / 2 + 10, y: p.y - 4, vy: -1050, w: 4, h: 15 });
-        state.lasers.push({ x: p.cx + p.w / 2 - 14, y: p.y - 4, vy: -1050, w: 4, h: 15 });
+        state.lasers.push({ x: p.cx - p.w / 2 + 10, y: p.y - 4, vy: -1050, w: 3, h: 12 });
+        state.lasers.push({ x: p.cx + p.w / 2 - 14, y: p.y - 4, vy: -1050, w: 3, h: 12 });
         sound('laser');
       }
     } else {
@@ -1307,15 +1236,15 @@
 
       ctx.globalAlpha = 0.45 + 0.4 * pulse;
       ctx.strokeStyle = state.theme.accent;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       const ax = x + w / 2;
-      const ay = bottom - 3;
+      const ay = bottom - 4;
       for (let i = 0; i < 3; i++) {
-        const yy = ay - i * 7;
+        const yy = ay - i * 6;
         ctx.beginPath();
-        ctx.moveTo(ax - 8, yy + 5);
+        ctx.moveTo(ax - 6, yy + 4);
         ctx.lineTo(ax, yy - 2);
-        ctx.lineTo(ax + 8, yy + 5);
+        ctx.lineTo(ax + 6, yy + 4);
         ctx.stroke();
       }
     }
@@ -1328,7 +1257,7 @@
     const x = p.cx - p.w / 2;
     ctx.save();
     ctx.shadowColor = state.theme.accent;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 12;
     const g = ctx.createLinearGradient(x, p.y, x, p.y + p.h);
     g.addColorStop(0, '#ffffff');
     g.addColorStop(0.45, state.theme.accent);
@@ -1391,17 +1320,17 @@
       ctx.translate(pu.x, pu.y);
       ctx.rotate(Math.sin(pu.rot) * 0.16);
       ctx.shadowColor = def.color;
-      ctx.shadowBlur = 14;
+      ctx.shadowBlur = 0;
       ctx.fillStyle = 'rgba(8,12,26,0.92)';
       ctx.strokeStyle = def.color;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.arc(0, 0, pu.r, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.shadowBlur = 0;
       ctx.fillStyle = def.color;
-      ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+      ctx.font = 'bold 9px "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(def.label, 0, 1);
@@ -1450,7 +1379,7 @@
     if (state.mode !== 'ready' && !hasStuck) return;
     ctx.globalAlpha = 0.5 + 0.35 * Math.sin(time * 3);
     ctx.fillStyle = '#cfe0ff';
-    ctx.font = 'bold 19px "Segoe UI", system-ui, sans-serif';
+    ctx.font = 'bold 15px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Klikni / mezernik. Zamer kulicku do male skuliny v ocelove zdi', W / 2, H - 108);
@@ -1587,7 +1516,7 @@
   state.balls = [];
   showOverlay(
     'BRICK BREAKER: INSANE',
-    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
+    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr - ceka te masa barevnych prstencu! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
     'Hrat',
     startGame
   );
