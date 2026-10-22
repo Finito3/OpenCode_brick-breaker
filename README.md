@@ -41,7 +41,11 @@ Ocelove kostky jsou neznicitelne vzdy - ani bomb ball nebo fireball je nerozbije
 
 ## Hudba
 
-- `assets/neon-gaming.mp3` - "Neon Gaming" od dopestuff, stazeno z Pixabay (https://pixabay.com/music/synthwave-neon-gaming-128925/), licence Pixabay Content License (zdarma i komercne, bez atribuce).
+Playlist se sam posouva po skonceni tracku, novy track se nahodi i pri novem startu hry.
+
+- `assets/neon-gaming.mp3` - "Neon Gaming" od dopestuff, stazeno z Pixabay (https://pixabay.com/music/synthwave-neon-gaming-128925/), licence Pixabay Content License.
+- `assets/shades-of-city.mp3` - "Shades of City (Neon Vibe)" od AlexGrohl, stazeno z Pixabay (https://pixabay.com/music/synthwave-shades-of-city-neon-vibe-195917/), licence Pixabay Content License.
+- `assets/synthwave.mp3` - "Synthwave" od penguinmusic, stazeno z Pixabay (https://pixabay.com/music/synthwave-synthwave-181569/), licence Pixabay Content License.
 
 ## Ovladani
 

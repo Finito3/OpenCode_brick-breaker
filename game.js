@@ -154,7 +154,13 @@
   let audio = null;
   let music = null;
   let musicWanted = false;
+  let musicIndex = -1;
   const MUSIC_VOLUME = 0.3;
+  const MUSIC_TRACKS = [
+    'assets/neon-gaming.mp3',
+    'assets/shades-of-city.mp3',
+    'assets/synthwave.mp3',
+  ];
   const keys = new Set();
   const lastSound = {};
   let lastScore = -1;
@@ -208,16 +214,32 @@
 
   function ensureMusic() {
     if (!music) {
-      music = new Audio('assets/neon-gaming.mp3');
-      music.loop = true;
+      music = new Audio();
       music.preload = 'auto';
       music.volume = MUSIC_VOLUME;
+      music.addEventListener('ended', () => {
+        if (!musicWanted) return;
+        musicIndex = (musicIndex + 1) % MUSIC_TRACKS.length;
+        music.src = MUSIC_TRACKS[musicIndex];
+        if (!muted) {
+          const p = music.play();
+          if (p && p.catch) p.catch(() => {});
+        }
+      });
+    }
+    if (!music.src) {
+      musicIndex = musicIndex < 0 ? 0 : musicIndex;
+      music.src = MUSIC_TRACKS[musicIndex];
     }
     return music;
   }
 
-  function playMusic() {
+  function playMusic(advance) {
     musicWanted = true;
+    if (advance) {
+      musicIndex = (musicIndex + 1) % MUSIC_TRACKS.length;
+      if (music) music.src = MUSIC_TRACKS[musicIndex];
+    }
     if (muted) return;
     const m = ensureMusic();
     if (m.paused) {
@@ -492,7 +514,7 @@
     resetBuffs();
     resetBall();
     hideOverlay();
-    playMusic();
+    playMusic(true);
   }
 
   function nextLevel() {
