@@ -30,10 +30,7 @@
   const FIELD_H = GRID.rows * STEPY - GRID.gap;
   const FIELD_CX = GRID.marginX + FIELD_W / 2;
   const FIELD_CY = GRID.top + FIELD_H / 2;
-  const RING_COLORS = [
-    '#ff4d5e', '#ff9f43', '#ffe14d', '#7dff6b',
-    '#3df5d0', '#4aa8ff', '#8a6bff', '#ff6bd6',
-  ];
+  const STEEL_COLOR = '#a8bfd0';
   const PADDLE = { baseW: 130, h: 12, y: H - 46, speed: 950 };
   const BALL_R = 4;
   const MAX_BALLS = 60;
@@ -65,12 +62,12 @@
   }
 
   const THEMES = [
-    { base: '#ff8a2b', accent: '#ffd45e', glow: 'rgba(255,138,43,0.16)' },
+    { base: '#2946d6', accent: '#a9c4ff', glow: 'rgba(41,70,214,0.18)' },
     { base: '#25c7e8', accent: '#a8f4ff', glow: 'rgba(37,199,232,0.16)' },
     { base: '#f0459e', accent: '#ffb3df', glow: 'rgba(240,69,158,0.16)' },
     { base: '#5fd44a', accent: '#d5ffb3', glow: 'rgba(95,212,74,0.16)' },
+    { base: '#ff8a2b', accent: '#ffd45e', glow: 'rgba(255,138,43,0.16)' },
     { base: '#9a6bff', accent: '#e0cfff', glow: 'rgba(154,107,255,0.16)' },
-    { base: '#ff5a4d', accent: '#ffd0b3', glow: 'rgba(255,90,77,0.16)' },
   ];
 
   const POWER_DEFS = {
@@ -97,7 +94,8 @@
     comboTimer: 0,
     grid: [],
     destructible: 0,
-    rowColors: [],
+    barrierRow: 32,
+    mazeCells: new Set(),
     theme: THEMES[0],
     corridors: [],
     walls: [],
@@ -356,11 +354,11 @@
 
   const LEVEL_GAPS = [
     [35],
-    [18, 54],
-    [45],
-    [14, 58],
-    [30],
-    [10, 36, 62],
+    [34],
+    [36],
+    [33],
+    [35],
+    [37],
   ];
 
   function makeBrick(r, c, type, hp, color) {
@@ -383,114 +381,173 @@
     const level = state.level;
     const theme = THEMES[(level - 1) % THEMES.length];
     state.theme = theme;
-    state.rowColors = [];
-    for (let r = 0; r < GRID.rows; r++) {
-      const amt = (r % 2 === 0 ? 0.05 : -0.06) + (r / GRID.rows - 0.5) * 0.12;
-      state.rowColors.push(shade(theme.base, amt));
-    }
 
     const barrierRow = 31 + (level % 3);
+    state.barrierRow = barrierRow;
     const gapWidth = 2;
-    const gapStarts = LEVEL_GAPS[(level - 1) % LEVEL_GAPS.length];
-    const corridorLen = 8 + (level % 2);
+    const gapStart = clamp(LEVEL_GAPS[(level - 1) % LEVEL_GAPS.length][0], 3, GRID.cols - gapWidth - 3);
+    const gapEnd = gapStart + gapWidth - 1;
 
     const grid = [];
     for (let r = 0; r < GRID.rows; r++) grid.push(new Array(GRID.cols).fill(null));
 
-    const chamberTop = 1;
-    const chamberBottom = barrierRow - 1;
-    const paletteShift = (level - 1) * 3;
+    const colorFor = (r, c, type) => {
+      if (type === 'gold') return '#ffd45e';
+      if (type === 'bomb') return shade(theme.base, -0.42);
+      if (type === 'tough') return shade(theme.base, 0.28);
+      return shade(theme.base, (r + c) % 2 === 0 ? 0.075 : -0.055);
+    };
 
-    for (let r = chamberTop; r <= chamberBottom; r++) {
+    for (let r = 1; r < barrierRow; r++) {
       for (let c = 0; c < GRID.cols; c++) {
-        const dist = Math.min(c, GRID.cols - 1 - c, r - chamberTop, chamberBottom - r);
-
-        let sideIdx = 0;
-        if (c === dist) sideIdx = 3;
-        else if (GRID.cols - 1 - c === dist) sideIdx = 1;
-        else if (chamberBottom - r === dist) sideIdx = 2;
-
         let type = 'normal';
         let hp = 1;
         const roll = Math.random();
-        if (roll < 0.014) {
+        if (roll < 0.006) {
           type = 'bomb';
-        } else if (roll < 0.03) {
+        } else if (roll < 0.008) {
           type = 'gold';
-        } else if (roll < 0.06 + level * 0.008) {
+        } else if (roll < 0.008 + level * 0.001) {
           type = 'tough';
           hp = level >= 5 ? 3 : 2;
         }
-
-        const color = RING_COLORS[(dist + sideIdx + paletteShift) % RING_COLORS.length];
-        grid[r][c] = makeBrick(r, c, type, hp, color);
+        grid[r][c] = makeBrick(r, c, type, hp, colorFor(r, c, type));
       }
     }
 
-    const corridors = [];
-    for (const start of gapStarts) {
-      const gs = clamp(start, 2, GRID.cols - gapWidth - 2);
-      const ge = gs + gapWidth - 1;
-      corridors.push({
-        gapStart: gs,
-        gapEnd: ge,
-        gapWidth,
-        topRow: barrierRow,
-        bottomRow: barrierRow + 1 + corridorLen,
-      });
+    const inChamber = (c, r) => c >= 0 && c < GRID.cols && r >= 1 && r < barrierRow;
+    const keyOf = (c, r) => r * GRID.cols + c;
+    const maze = new Set();
+    const carve = (c, r) => {
+      if (!inChamber(c, r)) return;
+      maze.add(keyOf(c, r));
+      grid[r][c] = null;
+    };
 
-      for (let r = Math.max(1, barrierRow - 4); r < barrierRow; r++) {
-        for (let c = gs - 3; c <= ge + 3; c++) {
-          if (c >= 0 && c < GRID.cols) grid[r][c] = null;
+    const marginX = 8 + (level % 3) * 2;
+    const marginTop = 3 + (level % 2);
+    const marginBottom = 4;
+    const L = marginX;
+    const R = GRID.cols - 1 - marginX;
+    const T = 1 + marginTop;
+    const B = barrierRow - 1 - marginBottom;
+    const cw = 3;
+    const step = 8;
+    const gapPlans = [];
+
+    for (let ring = 0; ; ring++) {
+      const l = L + ring * step;
+      const r = R - ring * step;
+      const t = T + ring * step;
+      const b = B - ring * step;
+      if (r - l < cw + 4 || b - t < cw + 4) break;
+
+      for (let y = t; y < t + cw; y++) {
+        for (let x = l; x <= r; x++) carve(x, y);
+      }
+      for (let x = r - cw + 1; x <= r; x++) {
+        for (let y = t; y <= b; y++) carve(x, y);
+      }
+      for (let y = b - cw + 1; y <= b; y++) {
+        for (let x = l; x <= r; x++) carve(x, y);
+      }
+      for (let x = l; x < l + cw; x++) {
+        for (let y = t; y <= b; y++) carve(x, y);
+      }
+
+      const sides = ring === 0 ? [0, 1, 3] : [0, 1, 2, 3];
+      const side = sides[Math.floor(Math.random() * sides.length)];
+      const gapLen = 3 + Math.floor(Math.random() * 3);
+      if (side === 0 || side === 2) {
+        const y0 = side === 0 ? t : b - cw + 1;
+        const span = Math.max(1, r - l - gapLen - 5);
+        const x0 = l + 3 + Math.floor(Math.random() * span);
+        gapPlans.push({ x0, y0, x1: Math.min(r - 2, x0 + gapLen - 1), y1: y0 + cw - 1 });
+      } else {
+        const x0 = side === 3 ? l : r - cw + 1;
+        const span = Math.max(1, b - t - gapLen - 5);
+        const y0 = t + 3 + Math.floor(Math.random() * span);
+        gapPlans.push({ x0, y0, x1: x0 + cw - 1, y1: Math.min(b - 2, y0 + gapLen - 1) });
+      }
+    }
+
+    for (let rr = Math.max(1, B); rr < barrierRow; rr++) {
+      carve(gapStart, rr);
+      carve(gapEnd, rr);
+    }
+
+    const outline = new Set();
+    for (const k of maze) {
+      const c = k % GRID.cols;
+      const r = (k / GRID.cols) | 0;
+      for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nc = c + dc;
+        const nr = r + dr;
+        if (inChamber(nc, nr) && !maze.has(keyOf(nc, nr))) outline.add(keyOf(nc, nr));
+      }
+    }
+
+    const outlineColor = shade(theme.base, 0.48);
+    for (const k of outline) {
+      const c = k % GRID.cols;
+      const r = (k / GRID.cols) | 0;
+      grid[r][c] = makeBrick(r, c, 'tough', 2, outlineColor);
+    }
+
+    for (const g of gapPlans) {
+      for (let r = g.y0; r <= g.y1; r++) {
+        for (let c = g.x0; c <= g.x1; c++) {
+          if (!inChamber(c, r)) continue;
+          const k = keyOf(c, r);
+          if (!maze.has(k)) continue;
+          maze.delete(k);
+          grid[r][c] = makeBrick(r, c, 'normal', 1, colorFor(r, c, 'normal'));
         }
       }
-
-      for (let i = 0; i < corridorLen; i++) {
-        const r = barrierRow + 2 + i;
-        if (r >= GRID.rows) break;
-        let spread = 0;
-        if (i >= corridorLen - 3) spread = i - (corridorLen - 3);
-        const lc = gs - 1 - spread;
-        const rc = ge + 1 + spread;
-        if (lc >= 0 && lc < GRID.cols) grid[r][lc] = makeBrick(r, lc, 'steel', 1);
-        if (rc >= 0 && rc < GRID.cols) grid[r][rc] = makeBrick(r, rc, 'steel', 1);
-      }
     }
 
-    for (let r = barrierRow; r < barrierRow + 2 && r < GRID.rows; r++) {
+    for (let rr = barrierRow; rr < barrierRow + 2 && rr < GRID.rows; rr++) {
       for (let c = 0; c < GRID.cols; c++) {
-        let inGap = false;
-        for (const co of corridors) {
-          if (c >= co.gapStart && c <= co.gapEnd) {
-            inGap = true;
-            break;
-          }
-        }
-        if (!inGap) grid[r][c] = makeBrick(r, c, 'steel', 1);
+        if (c >= gapStart && c <= gapEnd) continue;
+        grid[rr][c] = makeBrick(rr, c, 'steel', 1);
       }
     }
+
+    for (let rr = barrierRow; rr < barrierRow + 2 && rr < GRID.rows; rr++) {
+      for (let c = gapStart; c <= gapEnd; c++) maze.add(keyOf(c, rr));
+    }
+
+    const walls = [];
+    const wallY = GRID.top + barrierRow * STEPY;
+    const wallH = GRID.h * 2 + GRID.gap;
+    walls.push({ x: 0, y: wallY, w: GRID.marginX, h: wallH, type: 'steel', alive: true });
+    walls.push({ x: W - GRID.marginX, y: wallY, w: GRID.marginX, h: wallH, type: 'steel', alive: true });
 
     let destructible = 0;
-    for (let r = 0; r < GRID.rows; r++) {
+    for (let rr = 0; rr < GRID.rows; rr++) {
       for (let c = 0; c < GRID.cols; c++) {
-        const b = grid[r][c];
-        if (b && b.type !== 'steel') destructible++;
+        const cell = grid[rr][c];
+        if (cell && cell.type !== 'steel') destructible++;
       }
     }
 
     state.grid = grid;
-    state.corridors = corridors;
-    state.walls = [];
-    const wallY = GRID.top + barrierRow * STEPY;
-    const wallH = GRID.h * 2 + GRID.gap;
-    state.walls.push({ x: 0, y: wallY, w: GRID.marginX, h: wallH, type: 'steel', alive: true });
-    state.walls.push({ x: W - GRID.marginX, y: wallY, w: GRID.marginX, h: wallH, type: 'steel', alive: true });
+    state.walls = walls;
+    state.mazeCells = maze;
+    state.corridors = [{ gapStart, gapEnd, gapWidth, topRow: barrierRow, bottomRow: barrierRow + 1 }];
     state.destructible = destructible;
     state.powerups = [];
     state.lasers = [];
     state.particles = [];
     state.texts = [];
     state.brickDirty = true;
+
+    const swNormal = document.querySelector('.swatch-normal');
+    if (swNormal) swNormal.style.background = shade(theme.base, 0.075);
+    const swTough = document.querySelector('.swatch-tough');
+    if (swTough) swTough.style.background = outlineColor;
+    const swBomb = document.querySelector('.swatch-bomb');
+    if (swBomb) swBomb.style.background = shade(theme.base, -0.42);
   }
 
   function resetBall() {
@@ -645,15 +702,15 @@
   function brickColor(b) {
     switch (b.type) {
       case 'steel':
-        return '#5a6482';
+        return STEEL_COLOR;
       case 'tough':
-        return '#ff5f4a';
+        return b.color || '#9fb6c8';
       case 'bomb':
-        return '#5a2340';
+        return b.color || '#3a2340';
       case 'gold':
         return '#ffd45e';
       default:
-        return b.color || state.rowColors[b.row];
+        return b.color || '#2946d6';
     }
   }
 
@@ -1198,6 +1255,12 @@
 
   function redrawBricks() {
     bctx.clearRect(0, 0, W, H);
+    bctx.fillStyle = '#04060e';
+    for (const k of state.mazeCells) {
+      const c = k % GRID.cols;
+      const r = (k / GRID.cols) | 0;
+      bctx.fillRect(GRID.marginX + c * STEPX, GRID.top + r * STEPY, BW + GRID.gap, GRID.h + GRID.gap);
+    }
     for (let r = 0; r < GRID.rows; r++) {
       const row = state.grid[r];
       for (let c = 0; c < GRID.cols; c++) {
@@ -1237,9 +1300,19 @@
   }
 
   function drawFieldFrame() {
-    ctx.strokeStyle = 'rgba(210,225,255,0.14)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(GRID.marginX - 5, GRID.top - 5, FIELD_W + 10, FIELD_H + 10);
+    const bottom = GRID.top + (state.barrierRow + 2) * STEPY - GRID.gap;
+    const x = GRID.marginX - 4;
+    const y = GRID.top - 4;
+    const w = FIELD_W + 8;
+    const h = bottom - y;
+    ctx.fillStyle = STEEL_COLOR;
+    ctx.fillRect(x, y, w, 3);
+    ctx.fillRect(x, y, 3, h);
+    ctx.fillRect(x + w - 3, y, 3, h);
+    ctx.fillStyle = 'rgba(6,10,20,0.5)';
+    ctx.fillRect(x, y + 3, w, 1);
+    ctx.fillRect(x + 3, y, 1, h);
+    ctx.fillRect(x + w - 4, y, 1, h);
   }
 
   function drawCorridorMarkers(time) {
@@ -1282,8 +1355,8 @@
     ctx.shadowBlur = 12;
     const g = ctx.createLinearGradient(x, p.y, x, p.y + p.h);
     g.addColorStop(0, '#ffffff');
-    g.addColorStop(0.45, state.theme.accent);
-    g.addColorStop(1, state.theme.base);
+    g.addColorStop(0.5, '#dfe8f5');
+    g.addColorStop(1, '#9aa9c0');
     ctx.fillStyle = g;
     rr(ctx, x, p.y, p.w, p.h, 7);
     ctx.fill();
@@ -1538,7 +1611,7 @@
   state.balls = [];
   showOverlay(
     'BRICK BREAKER: INSANE',
-    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr - ceka te masa barevnych prstencu! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
+    'Kostky se skryvaji za ocelovou zdi. Zamer kulicku do svitici skuliny a proskakej ulickou dovnitr - ceka te bludiste z barevnych kostek! Kulicka se od kazde kostky odrazi. Chytej bonusy: M multi, X crazy, W wide, S slow, L laser, C sticky, F fireball, B bomb ball, + zivot. Barevne kostky jsou tvrdsi, sede ocelove jsou neznicitelne.',
     'Hrat',
     startGame
   );

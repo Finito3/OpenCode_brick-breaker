@@ -1,20 +1,18 @@
 # Brick Breaker: Vault
 
 Klasicka HTML5 brick breaker hra bez zavislosti, ale v "insane crazy" podani:
-kostky se skryvaji v ocelove komnate, do ktere vede jen mala skulina a uzka
-ulicka. Hrac musi kulicku do skuliny trefit - teprve pak se dostane ke
-znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
+kostky se skryvaji za ocelovou zdi, do ktere vede jen mala centralni skulina.
+Hrac musi kulicku do skuliny trefit - teprve pak se dostane do bludiste
+znicitelnych kostek. Staci otevrit `index.html` v prohlizeci.
 
 ## Funkce
 
-- Husta mozaika malych kostek (72 x 48 bunek) ukryta za ocelovou zdi.
-- **Mala skulina + uzka ulicka** - kulicka musi proskakat ulickou, aby se dostala dovnitr.
-- Kulicka se odrazi od kazde kostky, takze kazdy vstup do komnaty je poradna vyzva.
-- Vice skulin a ulicek vyssich levelech (az 3 vstupy).
-- V komnate nejsou zadne neznicitelne kostky, takze level jde vzdy dokoncit.
-- Soustredne barevne prstence z tisicu malych kostek, kazdy level s jinym barevnym ladenim.
+- Husta jednobarevna mrizka drobnych kostek (72 x 48 bunek) s vyrezanym cernym bludistem a svetlym obrysem.
+- **Mala centralni skulina + kratka vstupni chodba** do bludiste.
+- Kulicka se odrazi od kazde kostky, takze kazdy vstup do bludiste je poradna vyzva.
+- Svetly obrys bludiste je tvrdy (2 zasahy), ale pruselny; level jde vzdy dokoncit.
 - Mala kulicka (polomer 4) a drobne kostky - poradne husty a chaosem nabity feeling.
-- 6 tematickych levelu s rostouci obtiznosti, 5 zivotu.
+- 6 tematickych levelu s jinym barevnym ladenim a jinym tvarem bludiste, 5 zivotu.
 - Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).
 - Skalovani hraci plochy podle displeje (ostre i na 4K a retina obrazovkach).
 - **Combo system** - kazda znicena kostka zvysuje combo, nasobek skore az x25.
