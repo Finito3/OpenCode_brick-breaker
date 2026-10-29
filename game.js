@@ -350,6 +350,10 @@
       stuck: false,
       offset: 0,
       trail: [],
+      anchorX: x,
+      anchorY: y,
+      anchorT: 0,
+      lastHit: 0,
     };
   }
 
@@ -617,6 +621,9 @@
       b.vx = Math.sin(angle) * b.speed;
       b.vy = -Math.cos(angle) * b.speed;
       b.stuck = false;
+      b.anchorX = b.x;
+      b.anchorY = b.y;
+      b.anchorT = 0;
       launched = true;
     }
     if (launched) {
@@ -827,6 +834,8 @@
       return;
     }
 
+    b.lastHit = performance.now();
+
     if (state.buffs.bomb > 0) {
       const wasBomb = brick.type === 'bomb';
       destroyBrick(brick);
@@ -995,6 +1004,30 @@
         if (b.stuck) break;
         collideBricks(b);
         collideWalls(b);
+      }
+
+      b.anchorT += dt;
+      const moved = Math.hypot(b.x - b.anchorX, b.y - b.anchorY);
+      if (moved > 100 || performance.now() - b.lastHit < 1200) {
+        b.anchorX = b.x;
+        b.anchorY = b.y;
+        b.anchorT = 0;
+      } else if (b.anchorT > 5) {
+        b.stuck = true;
+        b.offset = clamp(b.x - p.cx, -p.w / 2 + 12, p.w / 2 - 12);
+        b.x = p.cx + b.offset;
+        b.y = p.y - b.r - 1;
+        b.vx = 0;
+        b.vy = -1;
+        b.trail.length = 0;
+        b.anchorX = b.x;
+        b.anchorY = b.y;
+        b.anchorT = 0;
+        b.lastHit = 0;
+        addText(b.x, b.y - 24, 'OSVOBOZENO', '#a9c4ff');
+        sound('power');
+        keep.push(b);
+        continue;
       }
 
       if (b.y - b.r > H + 24) {

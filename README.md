@@ -14,6 +14,7 @@ znicitelnym kostkam. Staci otevrit `index.html` v prohlizeci.
 - Kulicka se odrazi od kazde kostky, takze kazdy vstup do kostkoveho pole je poradna vyzva.
 - V kostkovem poli nejsou neznicitelne kostky, takze level jde vzdy dokoncit.
 - Kdyz zbyva poslednich par kostek, ocelove steny povoli a otevre se cesta ke zbytku.
+- Kdyz se kulicka zasekne v koute mezi ocelovymi bloky, po 5 s se vrati na palku (text OSVOBOZENO).
 - Mala kulicka (polomer 4) a drobne kostky - poradne husty a chaosem nabity feeling.
 - 6 tematickych levelu s jinym barevnym ladenim a jinym tvarem bludiste, 5 zivotu.
 - Hudba na pozadi a zvukove efekty, tlacitko pro ztlumeni (volba se pamatuje).
