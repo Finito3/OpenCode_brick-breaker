@@ -1008,11 +1008,12 @@
 
       b.anchorT += dt;
       const moved = Math.hypot(b.x - b.anchorX, b.y - b.anchorY);
-      if (moved > 100 || performance.now() - b.lastHit < 1200) {
+      const noHit = performance.now() - b.lastHit > 12000;
+      if (!noHit && (moved > 100 || performance.now() - b.lastHit < 1200)) {
         b.anchorX = b.x;
         b.anchorY = b.y;
         b.anchorT = 0;
-      } else if (b.anchorT > 5) {
+      } else if (b.anchorT > 5 || noHit) {
         b.stuck = true;
         b.offset = clamp(b.x - p.cx, -p.w / 2 + 12, p.w / 2 - 12);
         b.x = p.cx + b.offset;
